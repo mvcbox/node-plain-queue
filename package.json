@@ -1,0 +1,22 @@
+{
+  "name": "plain-queue",
+  "version": "1.0.0",
+  "description": "Queue",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mvcbox/node-plain-queue.git"
+  },
+  "keywords": [
+    "Queue"
+  ],
+  "author": "mvcbox.org@gmail.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mvcbox/node-plain-queue/issues"
+  },
+  "homepage": "https://github.com/mvcbox/node-plain-queue#readme"
+}
