@@ -26,6 +26,8 @@ function Queue(options) {
 
     if (typeof options.scheduler === 'function') {
         this._scheduler = options.scheduler;
+    } else {
+        this._scheduler = setImmediate;
     }
 }
 
@@ -34,12 +36,6 @@ function Queue(options) {
  * @private
  */
 Queue.prototype._queue = [];
-
-/**
- * @type {Function}
- * @private
- */
-Queue.prototype._scheduler = setImmediate;
 
 /**
  * @param {Function} item
