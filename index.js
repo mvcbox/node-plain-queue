@@ -9,7 +9,7 @@ module.exports = Queue;
  * @param {Function} callback
  */
 function whileLoop(callback) {
-    process.nextTick(function () {
+    setImmediate(function () {
         callback(function (brakeFlag) {
             brakeFlag || whileLoop(callback);
         });

@@ -1,6 +1,6 @@
 {
   "name": "plain-queue",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Queue",
   "main": "index.js",
   "scripts": {
