@@ -6,26 +6,40 @@
 module.exports = Queue;
 
 /**
+ * @param {Function} scheduler
  * @param {Function} callback
  */
-function whileLoop(callback) {
-    setImmediate(function () {
+function whileLoop(scheduler, callback) {
+    scheduler(function () {
         callback(function (brakeFlag) {
-            brakeFlag || whileLoop(callback);
+            brakeFlag || whileLoop(scheduler, callback);
         });
     });
 }
 
 /**
+ * @param {Object} options
  * @constructor
  */
-function Queue() {}
+function Queue(options) {
+    options = options || {};
+
+    if (typeof options.scheduler === 'function') {
+        this._scheduler = options.scheduler;
+    }
+}
 
 /**
  * @type {Array}
  * @private
  */
 Queue.prototype._queue = [];
+
+/**
+ * @type {Function}
+ * @private
+ */
+Queue.prototype._scheduler = setImmediate;
 
 /**
  * @param {Function} item
@@ -48,7 +62,7 @@ Queue.prototype._startLoop = function () {
     var _this = this;
     var item;
 
-    whileLoop(function (next) {
+    whileLoop(this._scheduler, function (next) {
         item = _this._queue.shift();
 
         if (typeof item !== 'function') {
