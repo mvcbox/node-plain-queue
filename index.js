@@ -23,6 +23,7 @@ function whileLoop(scheduler, callback) {
  */
 function Queue(options) {
     options = options || {};
+    this._queue = [];
 
     if (typeof options.scheduler === 'function') {
         this._scheduler = options.scheduler;
@@ -30,12 +31,6 @@ function Queue(options) {
         this._scheduler = setImmediate;
     }
 }
-
-/**
- * @type {Array}
- * @private
- */
-Queue.prototype._queue = [];
 
 /**
  * @param {Function} item
