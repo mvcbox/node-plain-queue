@@ -1,10 +1,12 @@
 {
   "name": "plain-queue",
-  "version": "1.1.2",
+  "version": "2.0.0",
   "description": "Queue",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "node ./node_modules/.bin/tsc"
   },
   "repository": {
     "type": "git",
@@ -18,5 +20,9 @@
   "bugs": {
     "url": "https://github.com/mvcbox/node-plain-queue/issues"
   },
-  "homepage": "https://github.com/mvcbox/node-plain-queue#readme"
+  "homepage": "https://github.com/mvcbox/node-plain-queue#readme",
+  "devDependencies": {
+    "@types/node": "^4.9.3",
+    "typescript": "^3.5.1"
+  }
 }
