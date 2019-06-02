@@ -3,7 +3,7 @@ import QueueOptions from './QueueOptions';
 
 export default class Queue {
     private _queue: TaskItem[] = [];
-    private _inProgress: boolean = false;
+    private _isIdle: boolean = true;
     private _scheduler: Function = setImmediate;
 
     constructor(options: QueueOptions = {}) {
@@ -12,8 +12,8 @@ export default class Queue {
         }
     }
 
-    private _updateProgressStatus(): void {
-        this._inProgress = !!this._queue.length;
+    private _updateStatus(): void {
+        this._isIdle = !this._queue.length;
     }
 
     private _whileLoop(callback: Function): void {
@@ -25,26 +25,26 @@ export default class Queue {
     }
 
     private _startLoop(): void {
-        this._inProgress = true;
+        this._isIdle = false;
 
         this._whileLoop((next: Function) => {
             const item: TaskItem | undefined = this._queue.shift();
 
             if (typeof item !== 'function') {
-                this._updateProgressStatus();
-                return next(!this._inProgress);
+                this._updateStatus();
+                return next(this._isIdle);
             }
 
             item(() => {
-                this._updateProgressStatus();
-                next(!this._inProgress);
+                this._updateStatus();
+                next(this._isIdle);
             });
         });
     }
 
     public push(task: TaskItem): this {
         this._queue.push(task);
-        !this._inProgress && this._startLoop();
+        this._isIdle && this._startLoop();
         return this;
     }
 }
