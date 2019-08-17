@@ -1,17 +1,18 @@
 {
   "compilerOptions": {
     "target": "es3",
-    "rootDir": "./src",
-    "outDir": "./dist",
+    "lib": ["es5", "es6"],
+    "rootDir": "src",
+    "outDir": "dist",
     "module": "commonjs",
     "moduleResolution": "node",
+    "esModuleInterop": true,
     "strict": true,
     "removeComments": true,
     "declaration": true,
     "sourceMap": false,
     "inlineSources": false,
     "allowJs": false,
-    "experimentalDecorators": true,
     "typeRoots": ["node_modules/@types"]
   }
 }

@@ -1,3 +1,3 @@
-export default interface QueueOptions {
-    scheduler?: Function;
+export interface QueueOptions {
+    taskTimeout?: number;
 }

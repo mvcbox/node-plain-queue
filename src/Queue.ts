@@ -1,50 +1,62 @@
-import TaskItem from './TaskItem';
-import QueueOptions from './QueueOptions';
+import Bluebird from 'bluebird';
+import { Task } from './Task';
+import { TaskOptions } from './TaskOptions';
+import { TimeoutError } from './TimeoutError';
+import { TaskFunction } from './TaskFunction';
+import { QueueOptions } from './QueueOptions';
 
-export default class Queue {
-    private _queue: TaskItem[] = [];
-    private _isIdle: boolean = true;
-    private _scheduler: Function = setImmediate;
+export class Queue {
+    public tasks: Task[] = [];
+    public options: QueueOptions;
+    public isIdle: boolean = true;
 
-    constructor(options: QueueOptions = {}) {
-        if (options.scheduler) {
-            this._scheduler = options.scheduler;
-        }
+    public constructor(options?: QueueOptions) {
+        this.options = options || {};
     }
 
-    private _updateStatus(): void {
-        this._isIdle = !this._queue.length;
-    }
+    protected async startLoop() {
+        this.isIdle = false;
 
-    private _whileLoop(callback: Function): void {
-        this._scheduler(() => {
-            callback((brakeFlag: boolean) => {
-                brakeFlag || this._whileLoop(callback);
-            });
-        });
-    }
+        while (this.tasks.length) {
+            const task: Task | undefined = this.tasks.shift();
 
-    private _startLoop(): void {
-        this._isIdle = false;
-
-        this._whileLoop((next: Function) => {
-            const item: TaskItem | undefined = this._queue.shift();
-
-            if (typeof item !== 'function') {
-                this._updateStatus();
-                return next(this._isIdle);
+            if (!task || !task.taskFunction || !task.onComplete) {
+                continue;
             }
 
-            item(() => {
-                this._updateStatus();
-                next(this._isIdle);
-            });
-        });
+            const timeout = task.options && task.options.timeout || this.options.taskTimeout;
+
+            try {
+                let result = task.taskFunction();
+
+                if (timeout) {
+                    result = Bluebird.resolve(result).timeout(timeout, new TimeoutError(`Task timeout [${timeout}ms]`))
+                }
+
+                task.onComplete(undefined, await result);
+            } catch (err) {
+                task.onComplete(err);
+            }
+
+            // Trick for Node.js event loop
+            // It is necessary for the Promise returned by the addTask method to be resolved before the next task starts.
+            await Bluebird.resolve();
+        }
+
+        this.isIdle = true;
     }
 
-    public push(task: TaskItem): this {
-        this._queue.push(task);
-        this._isIdle && this._startLoop();
-        return this;
+    public addTask<R = any>(taskFunction: TaskFunction<R>, options?: TaskOptions): Promise<R> {
+        return new Bluebird<R>((resolve, reject) => {
+            this.tasks.push({
+                taskFunction,
+                options,
+                onComplete(err: any, result: any) {
+                    err ? reject(err) : resolve(result);
+                }
+            });
+
+            this.isIdle && this.startLoop();
+        });
     }
 }

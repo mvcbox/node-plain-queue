@@ -1,12 +1,12 @@
 {
   "name": "plain-queue",
-  "version": "2.0.1",
+  "version": "3.0.0",
   "description": "Queue",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "node ./node_modules/.bin/tsc"
+    "build": "node ./node_modules/typescript/bin/tsc"
   },
   "repository": {
     "type": "git",
@@ -22,7 +22,11 @@
   },
   "homepage": "https://github.com/mvcbox/node-plain-queue#readme",
   "devDependencies": {
+    "@types/bluebird": "^3.5.27",
     "@types/node": "^4.9.3",
-    "typescript": "^3.5.1"
+    "typescript": "^3.5.3"
+  },
+  "dependencies": {
+    "bluebird": "^3.5.5"
   }
 }
