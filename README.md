@@ -1,6 +1,11 @@
-# node-plain-queue
+# plain-queue
 Queue library
 Support Node.js starting from version 0.10.x
+
+## Install
+```bash
+npm install --save plain-queue
+```
 
 ### Options for class ```Queue```
 - ```taskTimeout``` (```Number```) - Optional parameter. Execution timeout for each task. 
