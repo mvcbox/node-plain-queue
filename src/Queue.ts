@@ -41,7 +41,7 @@ export class Queue {
         this.taskPointer = 0;
     }
 
-    public async startLoop() {
+    public async startLoop(): Promise<void> {
         this.isIdle = false;
 
         while (this.haveTasks()) {
