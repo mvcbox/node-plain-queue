@@ -4,27 +4,54 @@ import { TaskOptions } from './TaskOptions';
 import { TimeoutError } from './TimeoutError';
 import { TaskFunction } from './TaskFunction';
 import { QueueOptions } from './QueueOptions';
+import { DEFAULT_GC_THRESHOLD } from './constants';
 
 export class Queue {
+    public taskPointer = 0;
     public tasks: Task[] = [];
-    public options: QueueOptions;
+    public gcThreshold: number;
+    public taskTimeout?: number;
     public isIdle: boolean = true;
 
     public constructor(options?: QueueOptions) {
-        this.options = options || {};
+        options = options || {};
+        this.taskTimeout = options.taskTimeout;
+        this.gcThreshold = options.gcThreshold || DEFAULT_GC_THRESHOLD;
     }
 
-    protected async startLoop() {
+    public getNextTask(): Task | undefined {
+        if (this.taskPointer > this.gcThreshold) {
+            this.gc();
+        }
+
+        return this.tasks[this.taskPointer++];
+    }
+
+    public haveTasks(): boolean {
+        return this.tasks.length > this.taskPointer;
+    }
+
+    public gc(): void {
+        if (this.haveTasks()) {
+            this.tasks = this.tasks.slice(this.taskPointer);
+        } else {
+            this.tasks = [];
+        }
+
+        this.taskPointer = 0;
+    }
+
+    public async startLoop() {
         this.isIdle = false;
 
-        while (this.tasks.length) {
-            const task: Task | undefined = this.tasks.shift();
+        while (this.haveTasks()) {
+            const task: Task | undefined = this.getNextTask();
 
             if (!task || !task.taskFunction || !task.onComplete) {
                 continue;
             }
 
-            const timeout = task.options && task.options.timeout || this.options.taskTimeout;
+            const timeout = task.options && task.options.timeout || this.taskTimeout;
 
             try {
                 let result = task.taskFunction();
@@ -43,6 +70,7 @@ export class Queue {
             await Bluebird.resolve();
         }
 
+        this.gc();
         this.isIdle = true;
     }
 

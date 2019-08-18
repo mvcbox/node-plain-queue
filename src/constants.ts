@@ -1,0 +1,1 @@
+export const DEFAULT_GC_THRESHOLD = 100;

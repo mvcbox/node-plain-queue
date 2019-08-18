@@ -9,13 +9,18 @@ npm install --save plain-queue
 
 ### Options for class ```Queue```
 - ```taskTimeout``` (```Number```) - Optional parameter. Execution timeout for each task. 
-If the value is not set, then the tasks do not have a time limit for execution
+If the value is not set, then the tasks do not have a time limit for execution. (Default: ```undefined```)
+- ```gcThreshold``` (```Number```) - Optional parameter.
+Threshold for the garbage collector that deletes completed tasks. (Default: ```100```)
 ##### Example:
 ```javascript
 'use strict';
 
 const { Queue } = require('plain-queue');
-const queue = new Queue({ taskTimeout: 5000 }); // Set 5 seconds timeout 
+const queue = new Queue({
+    taskTimeout: 5000,
+    gcThreshold: 300
+});
 ```
 
 ### Queue class method - ```addTask(taskFunction, options)```
