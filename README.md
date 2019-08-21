@@ -1,6 +1,6 @@
 # plain-queue
 Queue library
-Support Node.js starting from version 0.10.x
+Support Node.js starting from version 4.0.0
 
 ## Install
 ```bash
