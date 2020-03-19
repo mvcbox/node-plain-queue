@@ -8,7 +8,7 @@ import { DEFAULT_GC_THRESHOLD } from './constants';
 
 export class Queue {
     public taskPointer = 0;
-    public tasks: Task[] = [];
+    public tasks: Task<any>[] = [];
     public gcThreshold: number;
     public taskTimeout?: number;
     public isIdle: boolean = true;
@@ -19,7 +19,7 @@ export class Queue {
         this.gcThreshold = options.gcThreshold || DEFAULT_GC_THRESHOLD;
     }
 
-    public getNextTask(): Task | undefined {
+    public getNextTask(): Task<any> | undefined {
         if (this.taskPointer > this.gcThreshold) {
             this.gc();
         }
@@ -45,7 +45,7 @@ export class Queue {
         this.isIdle = false;
 
         while (this.haveTasks()) {
-            const task: Task | undefined = this.getNextTask();
+            const task: Task<any> | undefined = this.getNextTask();
 
             if (!task || !task.taskFunction || !task.onComplete) {
                 continue;
@@ -74,7 +74,7 @@ export class Queue {
         this.isIdle = true;
     }
 
-    public addTask<R = any>(taskFunction: TaskFunction<R>, options?: TaskOptions): Promise<R> {
+    public addTask<R>(taskFunction: TaskFunction<R>, options?: TaskOptions): Promise<R> {
         return new Bluebird<R>((resolve, reject) => {
             this.tasks.push({
                 taskFunction,

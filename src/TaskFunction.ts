@@ -1,3 +1,3 @@
-export interface TaskFunction<R = any> {
-    <R>(): Promise<R>;
+export interface TaskFunction<R> {
+    (): Promise<R>;
 }

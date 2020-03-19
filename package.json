@@ -1,6 +1,6 @@
 {
   "name": "plain-queue",
-  "version": "3.1.1",
+  "version": "3.1.2",
   "description": "Queue",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -21,12 +21,12 @@
     "url": "https://github.com/mvcbox/node-plain-queue/issues"
   },
   "homepage": "https://github.com/mvcbox/node-plain-queue#readme",
+  "dependencies": {
+    "bluebird": "^3.7.2"
+  },
   "devDependencies": {
     "@types/bluebird": "^3.5.27",
     "@types/node": "^4.9.3",
-    "typescript": "^3.5.3"
-  },
-  "dependencies": {
-    "bluebird": "^3.5.5"
+    "typescript": "^3.8.3"
   }
 }
