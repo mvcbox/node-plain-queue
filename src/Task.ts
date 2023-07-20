@@ -2,8 +2,9 @@ import { TaskOptions } from './TaskOptions';
 import { TaskFunction } from './TaskFunction';
 import { OnCompleteCallback } from './OnCompleteCallback';
 
-export interface Task<R> {
+export interface Task<T,R> {
+    taskData?: T;
     options?: TaskOptions;
-    taskFunction: TaskFunction<R>;
-    onComplete: OnCompleteCallback;
+    onComplete?: OnCompleteCallback;
+    taskFunction?: TaskFunction<T,R>;
 }

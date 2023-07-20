@@ -4,22 +4,33 @@ import { TaskOptions } from './TaskOptions';
 import { TimeoutError } from './TimeoutError';
 import { TaskFunction } from './TaskFunction';
 import { QueueOptions } from './QueueOptions';
+import { emptyFunction } from './empty-function';
 import { DEFAULT_GC_THRESHOLD } from './constants';
 
-export class Queue {
+export class Queue<T,R> {
     public taskPointer = 0;
-    public tasks: Task<any>[] = [];
     public gcThreshold: number;
     public taskTimeout?: number;
     public isIdle: boolean = true;
+    public tasks: Task<any,any>[] = [];
+    public taskFunction?: TaskFunction<T,R>;
 
     public constructor(options?: QueueOptions) {
-        options = options || {};
-        this.taskTimeout = options.taskTimeout;
-        this.gcThreshold = options.gcThreshold || DEFAULT_GC_THRESHOLD;
+        this.taskTimeout = options?.taskTimeout;
+        this.gcThreshold = options?.gcThreshold ?? DEFAULT_GC_THRESHOLD;
     }
 
-    public getNextTask(): Task<any> | undefined {
+    public setTaskFunction(input: TaskFunction<T,R>): this {
+        this.taskFunction = input;
+        return this;
+    }
+
+    public deleteTaskFunction(): this {
+        delete this.taskFunction;
+        return this;
+    }
+
+    public getNextTask(): Task<any,any> | undefined {
         if (this.taskPointer > this.gcThreshold) {
             this.gc();
         }
@@ -27,42 +38,55 @@ export class Queue {
         return this.tasks[this.taskPointer++];
     }
 
-    public haveTasks(): boolean {
+    public hasTasks(): boolean {
         return this.tasks.length > this.taskPointer;
     }
 
-    public gc(): void {
-        if (this.haveTasks()) {
+    public gc(): this {
+        if (this.hasTasks()) {
             this.tasks = this.tasks.slice(this.taskPointer);
         } else {
             this.tasks = [];
         }
 
         this.taskPointer = 0;
+        return this;
     }
 
     public async startLoop(): Promise<void> {
         this.isIdle = false;
 
-        while (this.haveTasks()) {
-            const task: Task<any> | undefined = this.getNextTask();
+        while (this.hasTasks()) {
+            const task: Task<any,any> | undefined = this.getNextTask();
 
-            if (!task || !task.taskFunction || !task.onComplete) {
+            if (!task) {
                 continue;
             }
 
-            const timeout = task.options && task.options.timeout || this.taskTimeout;
+            const timeout = task.options?.timeout ?? this.taskTimeout;
+            const taskFunction: TaskFunction<any,any> | undefined = task.taskFunction ?? this.taskFunction;
+            const onComplete = task.onComplete;
+
+            if (!taskFunction) {
+                continue;
+            }
 
             try {
-                let result = task.taskFunction();
+                let result = taskFunction(task.taskData);
 
                 if (timeout) {
                     result = Bluebird.resolve(result).timeout(timeout, new TimeoutError(`Task timeout [${timeout}ms]`))
+                } else {
+                    result = Promise.resolve(result);
                 }
 
-                task.onComplete(undefined, await result);
+                if (onComplete) {
+                    await result.then(function(result) { onComplete(undefined, result); });
+                } else {
+                    await result;
+                }
             } catch (err) {
-                task.onComplete(err);
+                onComplete && onComplete(err);
             }
 
             // Trick for Node.js event loop
@@ -74,17 +98,41 @@ export class Queue {
         this.isIdle = true;
     }
 
-    public addTask<R>(taskFunction: TaskFunction<R>, options?: TaskOptions): Promise<R> {
-        return new Bluebird<R>((resolve, reject) => {
-            this.tasks.push({
-                taskFunction,
-                options,
-                onComplete(err: any, result: any) {
-                    err ? reject(err) : resolve(result);
-                }
-            });
+    public addTaskData(taskData: T, options?: TaskOptions): Promise<R> | void {
+        if (!options?.ignoreResult) {
+            return new Bluebird<R>((resolve, reject) => {
+                this.tasks.push({
+                    taskData,
+                    options,
+                    onComplete(err: any, result: any) {
+                        err ? reject(err) : resolve(result);
+                    }
+                });
 
-            this.isIdle && this.startLoop();
-        });
+                this.isIdle && this.startLoop();
+            });
+        }
+
+        this.tasks.push({ taskData, options });
+        this.isIdle && this.startLoop();
+    }
+
+    public addTask<RR>(taskFunction: TaskFunction<any,RR>, options?: TaskOptions): Promise<RR> | void {
+        if (!options?.ignoreResult) {
+            return new Bluebird<RR>((resolve, reject) => {
+                this.tasks.push({
+                    taskFunction,
+                    options,
+                    onComplete(err: any, result: any) {
+                        err ? reject(err) : resolve(result);
+                    }
+                });
+
+                this.isIdle && this.startLoop();
+            });
+        }
+
+        this.tasks.push({ taskFunction, options });
+        this.isIdle && this.startLoop();
     }
 }
